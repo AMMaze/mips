@@ -1,6 +1,4 @@
-// in1, in2 - два числа
-// out - их сумма, выводится немедленно непрерывно
-// Width - ширина входных чисел и суммы, по умолчанию 32
+`timescale 1ns/1ns
 module adder
   #(parameter Width = 32)
   ( input [Width-1:0] in1,

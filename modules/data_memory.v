@@ -1,6 +1,7 @@
 // память данных состоит из восьми регистров и дополнительных структур, выдающих и записывающих в регистры нужные значения
 // непрерывно в odata выдаётся значение регистра ri, i = addr[4:2], т.е. addr - это смещение в памяти, и память игнорирует два последних бита (выравнивание по словам) и принимает во внимание только три последних бита оставшегося массива
 // если выставлен write, то по положительному фронту clock в регистр ri, i = addr[4:2], записывается значение idata
+`timescale 1ns/1ns
 module data_memory
   ( input [31:0] addr,
     output [31:0] odata,
@@ -12,14 +13,14 @@ module data_memory
   wire [31:0] rout0, rout1, rout2, rout3, rout4, rout5, rout6, rout7;
   
   bitdemux bdm(.i(write), .s(addr[4:2]), .o(l));
-  register r0(.in(idata), .out(rout0), .load(l[0]), .clock(clock));
-  register r1(.in(idata), .out(rout1), .load(l[1]), .clock(clock));
-  register r2(.in(idata), .out(rout2), .load(l[2]), .clock(clock));
-  register r3(.in(idata), .out(rout3), .load(l[3]), .clock(clock));
-  register r4(.in(idata), .out(rout4), .load(l[4]), .clock(clock));
-  register r5(.in(idata), .out(rout5), .load(l[5]), .clock(clock));
-  register r6(.in(idata), .out(rout6), .load(l[6]), .clock(clock));
-  register r7(.in(idata), .out(rout7), .load(l[7]), .clock(clock));
+  register r0(.in(idata), .out(rout0), .load(l[0]), .clock(clock), .reset(1'b0));
+  register r1(.in(idata), .out(rout1), .load(l[1]), .clock(clock), .reset(1'b0));
+  register r2(.in(idata), .out(rout2), .load(l[2]), .clock(clock), .reset(1'b0));
+  register r3(.in(idata), .out(rout3), .load(l[3]), .clock(clock), .reset(1'b0));
+  register r4(.in(idata), .out(rout4), .load(l[4]), .clock(clock), .reset(1'b0));
+  register r5(.in(idata), .out(rout5), .load(l[5]), .clock(clock), .reset(1'b0));
+  register r6(.in(idata), .out(rout6), .load(l[6]), .clock(clock), .reset(1'b0));
+  register r7(.in(idata), .out(rout7), .load(l[7]), .clock(clock), .reset(1'b0));
   mux8 m(
     .i0(rout0),
     .i1(rout1),

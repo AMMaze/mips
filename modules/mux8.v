@@ -1,5 +1,6 @@
 // обычный мультиплексор: на выход o выдаётся значение ij, где j = s
 // Width - ширина мультиплексируемых данных, по умолчанию - 32
+`timescale 1ns/1ns
 module mux8
   #(parameter Width = 32)
   ( input [Width-1:0] i0, i1, i2, i3, i4, i5, i6, i7,

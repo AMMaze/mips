@@ -1,3 +1,4 @@
+`timescale 1ns/1ns
 module mips_states (instr, reg_res, ALUSrc, MemToReg, RegWrite, MemWrite, MemRead, branch, eq, ALUCtrl);
 
 input [31:0] instr;

@@ -7,7 +7,11 @@ module test_bench ();
 		osc = 0;
 		rst = 1;
 	end
-
+    
+    initial begin
+        $dumpfile("testbench.vcd");
+        $dumpvars(0, test_bench);
+    end
 
 	always begin
 		if(rst == 1)
@@ -22,12 +26,12 @@ module test_bench ();
 	wire reset;
 	assign reset = rst;
 
-	wire reg_res;
+	wire reg_res; //true: write to [15:11] reg (third) (ADDI, LW); false: write to [20:16] reg (second) (R)
 	wire ALUSrc;
-	wire MemToReg;
-	wire reg_write;
-	wire MemWrite;
-	wire MemRead;
+	wire MemToReg; //from memory to register (LW)
+	wire reg_write; //true: write to register
+	wire MemWrite; //write to memory (SW)
+	wire MemRead; //read from memory (LW)
 	wire eq;
 	wire branch, pc_ctrl;
 	wire [5:0] ALU_ctrl;

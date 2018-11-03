@@ -1,3 +1,4 @@
+`timescale 1ns/1ns
 module pc(clk, newPC, PC); 
   
 input clk;

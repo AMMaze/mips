@@ -4,6 +4,7 @@
 // на выход rdata2 непрерывно выдаётся значение rj, j = raddr2[2:0]
 // по сигналу reset немедленно все регистры сбрасываются в 0
 // если write = 1, то по переднему фронту clock'а в регистр rk, k = waddr[2:0] записывается значение wdata
+`timescale 1ns/1ns
 module register_file
   ( input [4:0] raddr1, raddr2, waddr,
     input [31:0] wdata,

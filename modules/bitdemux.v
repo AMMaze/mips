@@ -5,6 +5,7 @@
 // то есть в каждый момент времени имеем o[s] = i и o[k] = 0 при k != j
 //
 // параметр LogNum - ширина управляющей шины s; с помощью LogNum бит кодируются числа от 0 до 2**LogNum - 1 - это ширина выходной шины o
+`timescale 1ns/1ns
 module bitdemux
   #(parameter LogNum = 3)
   ( input i,

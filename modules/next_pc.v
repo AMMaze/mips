@@ -1,3 +1,4 @@
+`timescale 1ns/1ns
 module next_pc (currPC, out, offset, jmp); 
   input [31:0] currPC, offset;
   input jmp;
