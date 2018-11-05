@@ -1,7 +1,7 @@
 `timescale 1ns/1ns
-module pc(clk, newPC, PC); 
+module pc(clk, newPC, PC, reset); 
   
-input clk;
+input clk, reset;
 input [31:0] newPC;  
 output [31:0] PC;  
 
@@ -11,8 +11,11 @@ initial begin
 currPC = 0;
 end
 
-always @(posedge clk) begin
-  currPC = newPC;
+always @(posedge clk, posedge reset) begin
+    if (reset)
+        currPC = 0;
+    else
+        currPC = newPC;
 end
 
 assign PC = currPC;

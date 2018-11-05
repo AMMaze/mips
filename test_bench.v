@@ -3,9 +3,12 @@ module test_bench ();
 
 	reg osc;
 	reg rst;
+    reg change, step;
 	initial begin
 		osc = 0;
 		rst = 1;
+        change = 0;
+        step = 0;
 	end
     
     initial begin
@@ -19,7 +22,16 @@ module test_bench ();
 		else
 			#100 osc = ~osc;
 	end
-	wire clk;
+	
+    mips mips_mod(
+        .clock(osc),
+        .reset(rst),
+        .change(change),
+        .step(step)
+    );
+
+    /*
+    wire clk;
 	assign clk = osc; 
 	
 
@@ -122,5 +134,6 @@ module test_bench ();
 	mux2 mux2_3(ALU_out, mem_data, MemToReg, write_data); 
 	
 	mips_states control(i_data, reg_res, ALUSrc, MemToReg, reg_write, MemWrite, MemRead, branch, eq, ALU_ctrl);
-	
+    */
+
 endmodule
