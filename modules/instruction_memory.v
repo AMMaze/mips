@@ -15,9 +15,24 @@ module instruction_memory
   parameter OP_BNE = 6'b000101;
   parameter OP_LW = 6'b100011;
   parameter OP_SW = 6'b101011;
+  parameter OP_ADDIU = 6'b001001;
+  parameter OP_ANDI = 6'b100101;
+  parameter OP_ANDIU = 6'b100100;
+  parameter OP_ORI = 6'b100111;
+  parameter OP_ORIU = 6'b100110;
+  parameter OP_SLTI = 6'b100011;
+  parameter OP_SLTIU = 6'b100010;
+  parameter OP_J = 6'b000001;
   
   parameter OPR_ADD = 6'b100000;
   parameter OPR_SUB = 6'b100010;
+  parameter OPR_AND = 6'b100100;
+  parameter OPR_OR = 6'b100101;
+  parameter OPR_SLTU = 6'b101011;
+  parameter OPR_SLT = 6'b101010;
+
+  parameter OPR_ADDU = 6'b100001;
+  parameter OPR_SUBU = 6'b100011;
   
   parameter R00 = 5'd0;
   parameter R01 = 5'd1;
@@ -56,13 +71,17 @@ module instruction_memory
   
   always @(sel)
   case(sel)
-    32'd0 : out = {OP_ADDI, R00, R00, 16'd3}; // $0 = $0 + 3
-    32'd4 : out = {OP_ADDI, R01, R01, 16'd4}; // $1 = $1 + 4
-    32'd8 : out = {OP_SW, R00, R01, 16'd0}; // MEM[$0 + 0] = $1
-    32'd12 : out = {OP_R, R00, R01, R02, ZERO_SHAMT, OPR_ADD}; // $2 = $1 + $0
-    32'd16 : out = {OP_R, R00, R01, R03, ZERO_SHAMT, OPR_ADD}; // $3 = $1 + $0
-    32'd20 : out = {OP_LW, R00, R03, 16'd0}; // $3 = MEM[$0 + 0]
-    32'd24 : out = {OP_BNE, R02, R03, -16'd5}; // if($0 == $1) jump to (16 + 4 + 4 * (-3)) = 8
+    32'd0 : out = {OP_ADDI, R00, R00, 16'd3}; // $0 = $0 + 3 -> $0 == 3
+    32'd4 : out = {OP_ADDIU, R01, R01, 16'd4}; // $1 = $1 + 4 -> $1 == 4
+    32'd8 : out = {OP_SW, R00, R01, 16'd0}; // MEM[$0 + 0] = $1 -> MEM[3] == 4
+    32'd12 : out = {OP_R, R00, R01, R02, ZERO_SHAMT, OPR_ADDU}; // $2 = $1 + $0 -> $2 == 7
+    32'd16 : out = {OP_R, R00, R01, R03, ZERO_SHAMT, OPR_ADDU}; // $3 = $1 + $0 -> $3 == 7
+    32'd20 : out = {OP_LW, R00, R03, 16'd0}; // $3 = MEM[$0 + 0] -> $3 == 4
+    32'd24 : out = {OP_BEQ, R02, R03, -16'd3}; // if($2 == $3) jump to (16 + 4 + 4 * (-3)) = 8
+    32'd28 : out = {OP_ADDI, R04, R04, 16'd0}; // $4 = $4 + 0 -> $4 == 0
+    32'd32 : out = {OP_ADDI, R00, R00, -16'd1}; // $0 = $0 + (-1) -> $0-- 
+    32'd36 : out = {OP_BNE, R00, R04, -16'd2}; // if($0 != $4) jump to (36 + 4 + 4 * (-2)) = 32
+    32'd40 : out = {OP_J, 26'd0}; // jump to 4 * 0 = 0
     default: out = 0;
   endcase
 endmodule
