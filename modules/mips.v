@@ -109,6 +109,7 @@ module mips (clock, reset, change, step);
 
     wire [31:0] goto_addr;
     wire goto_flg;
+    //extending 26 bits to 32 for goto
     jump_target jump_target(
         .im_val(i_data[25:0]),
         .target(goto_addr),
@@ -117,6 +118,8 @@ module mips (clock, reset, change, step);
     );        
 
     wire [31:0] res_jump_addr;
+    //deciding whether we should use offset for conditional jump or addres for
+    //goto
     mux2 #(32) mux2_jump(extended32, goto_addr, goto_flg, res_jump_addr); 
 
     //returns address of a new instruction
