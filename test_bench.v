@@ -32,7 +32,7 @@ module test_bench ();
         step = 0;
         #10
         step = 1;
-        #10
+        #30
         change = 0;
         #250
         $finish;
