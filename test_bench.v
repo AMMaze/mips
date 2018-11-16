@@ -28,12 +28,13 @@ module test_bench ();
         change = 1;
         #10
         step = 1;
+        change = 0;
         #10
         step = 0;
         #10
         step = 1;
         #30
-        change = 0;
+        change = 1;
         #250
         $finish;
     end
