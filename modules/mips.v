@@ -4,20 +4,43 @@ module mips (clock, reset, change, step);
     input clock, reset, change, step;
 
     reg osc;
+    
+    reg int_change;
 
+    always @(posedge reset)
+    begin
+        int_change = 0;
+        osc = 0;
+    end
+
+    always @(posedge change)
+        int_change = ~int_change;
     
     always @(clock)
     begin
-        if(!change)
+        if(!int_change)
             osc = clock;
     end
 
     always @(posedge clock)
     begin
-        if(change)
+        if(int_change)
             osc = step;
     end
 
+    //always @(posedge change)
+    //begin 
+        
+    //end
+    /*
+    register #(1) change_mem(
+        .in(int_change),
+        .out(int_change),
+        .load(change),
+        .clock(clock),
+        .reset(reset)
+    );
+    */
     /*always @(posedge change, step)
     begin
         if (change)
