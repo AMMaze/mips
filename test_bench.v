@@ -33,6 +33,10 @@ module test_bench ();
         step = 0;
         #10
         step = 1;
+        #2
+        change = 1;
+        #1
+        change = 0;
         #30
         change = 1;
         #250
