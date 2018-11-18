@@ -3,59 +3,15 @@ module mips (clock, reset, change, step);
     
     input clock, reset, change, step;
 
-    reg osc;
-    
-    reg int_change;
-
-    always @(posedge reset)
-    begin
-        int_change = 0;
-        osc = 0;
-    end
-
-    always @(posedge change)
-        int_change = ~int_change;
-    
-    always @(clock)
-    begin
-        if(!int_change)
-            osc = clock;
-    end
-
-    always @(posedge clock)
-    begin
-        if(int_change)
-            osc = step;
-    end
-
-    //always @(posedge change)
-    //begin 
-        
-    //end
-    /*
-    register #(1) change_mem(
-        .in(int_change),
-        .out(int_change),
-        .load(change),
-        .clock(clock),
-        .reset(reset)
-    );
-    */
-    /*always @(posedge change, step)
-    begin
-        if (change)
-            osc = step;
-    end
-    */
-
     wire clk;
-    assign clk = osc;
-    
-    
-    //wire clk;
+    clock_state clk_st(
+        .clock(clock),
+        .reset(reset),
+        .change(change),
+        .step(step),
+        .out_clk(clk)
+    );
 
-    //always @(posedge clock) 
-    //mux2 #(1) osc_select(clock, step, change, clk);
 
     wire reg_res; //false: write to [15:11] reg (third) (ADDI, LW); true: write to [20:16] reg (second) (R)
 	wire ALUSrc; //true: second operand is extended [15:0] (constant, offset); false: second operand is [20:16] (register)
