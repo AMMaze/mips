@@ -6,7 +6,7 @@ module test_bench ();
     reg change, step;
 	initial begin
 		osc = 0;
-		rst = 1;
+		rst = 0;
         change = 0;
         step = 0;
 	end
@@ -24,7 +24,8 @@ module test_bench ();
 	end
 	
     initial begin
-        #40
+        //change = 0;
+        #50
         change = 1;
         #10
         step = 1;
