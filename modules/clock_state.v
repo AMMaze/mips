@@ -6,11 +6,12 @@ module clock_state (clock, reset, change, step, out_clk);
 
     reg int_clk, prev_change, change_pushed;
 
-    initial begin
+    /*initial begin
         int_clk = 0;
         prev_change = 0;
         change_pushed = 0;
     end
+    */
 
     always @(posedge reset) begin
         int_clk = 0;

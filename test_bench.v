@@ -6,7 +6,7 @@ module test_bench ();
     reg change, step;
 	initial begin
 		osc = 0;
-		rst = 0;
+		rst = 1;
         change = 0;
         step = 0;
 	end
