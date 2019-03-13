@@ -104,19 +104,26 @@ module mips (clock, reset, change, step);
         .goto(goto_flg)
     );        
 
+    //result address for conditional jump (+offset)
+    wire [31:0] cond_addr;
+    adder #(32) cond(
+        .x(32'd4 + 32'd4 * extended32),
+        .y(i_addr),
+        .out(cond_addr)
+    );
+
     wire [31:0] res_jump_addr;
     //deciding whether we should use offset for conditional jump or address for
     //goto
-    mux2 #(32) mux2_jump(extended32, goto_addr, goto_flg, res_jump_addr); 
+    mux2 #(32) mux2_jump(cond_addr, goto_addr, goto_flg, res_jump_addr); 
 
     //returns address of a new instruction
     //offset is applied to current address only when jump is active
 	next_pc NextPC(
         .currPC(i_addr), 
         .out(new_addr), 
-        .offset(res_jump_addr), 
-        .jmp(pc_ctrl), 
-        .goto(goto_flg)
+        .jmp_addr(res_jump_addr), 
+        .jmp(pc_ctrl)
     );
 
     //destination register depends on the type of instruction
