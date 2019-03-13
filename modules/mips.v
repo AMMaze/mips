@@ -46,7 +46,7 @@ module mips (clock, reset, change, step);
 	wire [31:0] read_data1; //data from first register [25:21]
     wire [31:0] read_data2; //data from second register [20:16]
     wire [31:0] write_data; //data for writing into the write_addr
-    //file with all registers that actually just a pair of muxs (select outputs
+    //file with all registers that actually just a pair of muxs (selects outputs
     //from registers specified in raddr1 and raddr2).
 	register_file regfile(
         .raddr1(i_data[25:21]), 
@@ -105,7 +105,7 @@ module mips (clock, reset, change, step);
     );        
 
     wire [31:0] res_jump_addr;
-    //deciding whether we should use offset for conditional jump or addres for
+    //deciding whether we should use offset for conditional jump or address for
     //goto
     mux2 #(32) mux2_jump(extended32, goto_addr, goto_flg, res_jump_addr); 
 
