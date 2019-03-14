@@ -42,6 +42,18 @@ module mips (clock, reset, change, step);
         .out(i_data)
     );
 	
+    //buffer for first pipeline stage 
+    wire [31:0] pc_out;
+    wire [31:0] instr_out;
+    pipeline_1 ifetch (
+        .clock(clk),
+        .reset(reset),
+        .pc_in(i_addr),
+        .instr_in(i_data),
+        .pc_out(pc_out),
+        .instr_out(instr_out)
+    );
+
 	wire [4:0] write_addr; //write to this register
 	wire [31:0] read_data1; //data from first register [25:21]
     wire [31:0] read_data2; //data from second register [20:16]
@@ -49,8 +61,8 @@ module mips (clock, reset, change, step);
     //file with all registers that actually just a pair of muxs (selects outputs
     //from registers specified in raddr1 and raddr2).
 	register_file regfile(
-        .raddr1(i_data[25:21]), 
-        .raddr2(i_data[20:16]), 
+        .raddr1(instr_out[25:21]), 
+        .raddr2(instr_out[20:16]), 
         .waddr(write_addr), 
         .wdata(write_data), 
         .write(reg_write), 
@@ -85,7 +97,7 @@ module mips (clock, reset, change, step);
     wire Sign;
     //since immediate values are restricted to 16 bits, we have to extend it to 32 bits
 	sign_ext SignExt(
-        .in(i_data[15:0]), 
+        .in(instr_out[15:0]), 
         .sign(Sign),
         .out(extended32[31:0])
     );
@@ -98,9 +110,9 @@ module mips (clock, reset, change, step);
     wire goto_flg;
     //extending 26 bits to 32 for goto
     jump_target jump_target(
-        .im_val(i_data[25:0]),
+        .im_val(instr_out[25:0]),
         .target(goto_addr),
-        .curr_addr(i_addr),
+        .curr_addr(pc_out),
         .goto(goto_flg)
     );        
 
@@ -108,7 +120,7 @@ module mips (clock, reset, change, step);
     wire [31:0] cond_addr;
     adder #(32) cond(
         .x(32'd4 + 32'd4 * extended32),
-        .y(i_addr),
+        .y(pc_out),
         .out(cond_addr)
     );
 
@@ -118,8 +130,9 @@ module mips (clock, reset, change, step);
     mux2 #(32) mux2_jump(cond_addr, goto_addr, goto_flg, res_jump_addr); 
 
     //returns address of a new instruction
-    //offset is applied to current address only when jump is active
 	next_pc NextPC(
+        .clock(clk),
+        .reset(reset),
         .currPC(i_addr), 
         .out(new_addr), 
         .jmp_addr(res_jump_addr), 
@@ -128,13 +141,13 @@ module mips (clock, reset, change, step);
 
     //destination register depends on the type of instruction
     //R-type -> [15:11]
-	mux2 #(5) mux2_1(i_data[20:16], i_data[15:11], reg_res, write_addr); 
+	mux2 #(5) mux2_1(instr_out[20:16], instr_out[15:11], reg_res, write_addr); 
     //source for second operand in ALU: constant/register
 	mux2 mux2_2(read_data2, extended32, ALUSrc, ALU_input); 
     //for lw-op result is loaded from memory, in other cases - output from alu
 	mux2 mux2_3(ALU_out, mem_data, MemToReg, write_data); 
 	
-	mips_states control(i_data, reg_res, ALUSrc, MemToReg, reg_write, MemWrite, MemRead, branch, eq, goto_flg, Sign, ALU_ctrl);
+	mips_states control(instr_out, reg_res, ALUSrc, MemToReg, reg_write, MemWrite, MemRead, branch, eq, goto_flg, Sign, ALU_ctrl);
 
 
 endmodule

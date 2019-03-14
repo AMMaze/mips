@@ -16,7 +16,7 @@ module clock_state (clock, reset, change, step, out_clk);
     always @(posedge reset) begin
         int_clk = 0;
         prev_change = 0;
-        change_pushed = 1;
+        change_pushed = 0;
     end
 
     always @(clock)
