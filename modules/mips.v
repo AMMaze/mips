@@ -24,6 +24,12 @@ module mips (clock, reset, change, step);
     wire pc_ctrl; //next instruction: pc + 4 bytes * offset
 	wire [5:0] ALU_ctrl; //alu opcode
 
+    //wires for decode buffer
+    wire ALUSrc_decode, MemToReg_decode, reg_write_decode, MemWrite_decode;
+    wire MemRead_decode, branch_decode, eq_decode, goto_flg_decode;
+    wire Sign_decode;
+    wire [5:0] ALU_ctrl_decode;
+
 	wire [31:0] new_addr, i_addr; //instructions addresses
     //program counter that works like this: pass new instruct address -> on pos
     //edge of the clock it will change it's output (PC) for new address
@@ -58,14 +64,16 @@ module mips (clock, reset, change, step);
 	wire [31:0] read_data1; //data from first register [25:21]
     wire [31:0] read_data2; //data from second register [20:16]
     wire [31:0] write_data; //data for writing into the write_addr
+
+    wire [4:0] dest_decode;
     //file with all registers that actually just a pair of muxs (selects outputs
     //from registers specified in raddr1 and raddr2).
 	register_file regfile(
         .raddr1(instr_out[25:21]), 
         .raddr2(instr_out[20:16]), 
-        .waddr(write_addr), 
+        .waddr(dest_decode), 
         .wdata(write_data), 
-        .write(reg_write), 
+        .write(reg_write_decode), 
         .clock(clk), 
         .reset(reset), 
         .rdata1(read_data1), 
@@ -79,15 +87,15 @@ module mips (clock, reset, change, step);
 	alu mips_alu(
         .in1(read_data1), 
         .in2(ALU_input), 
-        .aluop(ALU_ctrl), 
+        .aluop(ALU_ctrl_decode), 
         .out(ALU_out)
     );
 	
 	wire [31:0] mem_data; //data loaded from memory (array)
     //memory implemented by means of arrays
     memory data_mem(
-        .read(MemRead), 
-        .write(MemWrite), 
+        .read(MemRead_decode), 
+        .write(MemWrite_decode), 
         .addr(ALU_out[7:0]), 
         .data_in(read_data2), 
         .data_out(mem_data)
@@ -98,22 +106,65 @@ module mips (clock, reset, change, step);
     //since immediate values are restricted to 16 bits, we have to extend it to 32 bits
 	sign_ext SignExt(
         .in(instr_out[15:0]), 
-        .sign(Sign),
+        .sign(Sign_decode),
         .out(extended32[31:0])
     );
 	
+    wire [31:0] pc_out_decode;
+    wire [31:0] rdata_decode_1;
+    wire [31:0] rdata_decode_2;
+    wire [31:0] offset_decode;
+    wire [5:0] op_decode;
+    wire goto_flg;
+    pipeline_2 idecode(
+        .clock(clk),
+        .reset(reset),
+        .pc_in(pc_out),
+        .valA_in(read_data1),
+        .valB_in(read_data2),
+        .offset_in(extended32),
+        .dest_in(write_addr),
+        .op_in(instr_out[31:26]),
+        .pc_out(pc_out_decode),
+        .valA_out(rdata_decode_1),
+        .valB_out(rdata_decode_2),
+        .offset_out(offset_decode),
+        .dest_out(dest_decode),
+        .op_out(op_decode),
+        .ALU_in(ALUSrc),
+        .ALU_out(ALUSrc_decode),
+        .MemToReg_in(MemToReg),
+        .MemToReg_out(MemToReg_decode),
+        .RegWrt_in(reg_write),
+        .RegWrt_out(reg_write_decode),
+        .MemWrt_in(MemWrite),
+        .MemWrt_out(MemWrite_decode),
+        .MemRead_in(MemRead),
+        .MemRead_out(MemRead_decode),
+        .branch_in(branch),
+        .branch_out(branch_decode),
+        .eq_in(eq),
+        .eq_out(eq_decode),
+        .goto_in(goto_flg),
+        .goto_out(goto_flg_decode),
+        .Sign_in(Sign),
+        .Sign_out(Sign_decode),
+        .ALU_ctrl_in(ALU_ctrl),
+        .ALU_ctrl_out(ALU_ctrl_decode)
+    ); 
+
+
     //interpretation of ALU_out, that is basically just a subtraction of given operands,  
     //depends on the type of an instruction (bne/beq) 
-	assign pc_ctrl = ((ALU_out != 32'd0)^eq) ? branch : 0;
+	assign pc_ctrl = ((ALU_out != 32'd0)^eq_decode) ? branch_decode : 0;
 
     wire [31:0] goto_addr;
-    wire goto_flg;
     //extending 26 bits to 32 for goto
     jump_target jump_target(
         .im_val(instr_out[25:0]),
         .target(goto_addr),
         .curr_addr(pc_out),
-        .goto(goto_flg)
+        .goto(goto_flg_decode)
     );        
 
     //result address for conditional jump (+offset)
@@ -127,7 +178,7 @@ module mips (clock, reset, change, step);
     wire [31:0] res_jump_addr;
     //deciding whether we should use offset for conditional jump or address for
     //goto
-    mux2 #(32) mux2_jump(cond_addr, goto_addr, goto_flg, res_jump_addr); 
+    mux2 #(32) mux2_jump(cond_addr, goto_addr, goto_flg_decode, res_jump_addr); 
 
     //returns address of a new instruction
 	next_pc NextPC(
@@ -143,9 +194,9 @@ module mips (clock, reset, change, step);
     //R-type -> [15:11]
 	mux2 #(5) mux2_1(instr_out[20:16], instr_out[15:11], reg_res, write_addr); 
     //source for second operand in ALU: constant/register
-	mux2 mux2_2(read_data2, extended32, ALUSrc, ALU_input); 
+	mux2 mux2_2(read_data2, extended32, ALUSrc_decode, ALU_input); 
     //for lw-op result is loaded from memory, in other cases - output from alu
-	mux2 mux2_3(ALU_out, mem_data, MemToReg, write_data); 
+	mux2 mux2_3(ALU_out, mem_data, MemToReg_decode, write_data); 
 	
 	mips_states control(instr_out, reg_res, ALUSrc, MemToReg, reg_write, MemWrite, MemRead, branch, eq, goto_flg, Sign, ALU_ctrl);
 

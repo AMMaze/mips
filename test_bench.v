@@ -24,23 +24,23 @@ module test_bench ();
 	end
 	
     initial begin
+        ////change = 0;
+        //#50
+        //change = 1;
+        //#10
+        //step = 1;
         //change = 0;
-        #50
-        change = 1;
-        #10
-        step = 1;
-        change = 0;
-        #10
-        step = 0;
-        #10
-        step = 1;
-        #2
-        change = 1;
-        #1
-        change = 0;
-        #30
-        change = 1;
-        #250
+        //#10
+        //step = 0;
+        //#10
+        //step = 1;
+        //#2
+        //change = 1;
+        //#1
+        //change = 0;
+        //#30
+        //change = 1;
+        #500
         $finish;
     end
 
