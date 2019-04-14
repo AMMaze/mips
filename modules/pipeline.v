@@ -149,11 +149,11 @@ module pipeline (
         .alu_result(b3_alu_res),
         .valB(b3_read_data2),
         .signals(b3_signals),
-        .memory_data(mdata)
+        .final_data(wrdata)
     );
 
 
-    wire [31:0] b4_alu_res, b4_mdata;
+    wire [31:0] b4_wrdata;
     wire [4:0] b4_dest;
     wire [5:0] b4_alu_op;
     wire [7:0] b4_signals;
@@ -161,24 +161,24 @@ module pipeline (
     buffer4 mem_wrt_buf4 (
         .clock(clk),
         .reset(reset),
-        .alu_in(b3_alu_res),
-        .mem_in(mdata),
+        .data_in(wrdata),
+        //.mem_in(mdata),
         .dest_in(b3_dest),
         .op_in(b3_alu_op),
         .signals_in(b3_signals),
-        .alu_out(b4_alu_res),
-        .mem_out(b4_mdata),
+        .data_out(b4_wrdata),
+        //.mem_out(b4_mdata),
         .dest_out(b4_dest),
         .op_out(b4_alu_op),
         .signals_out(b4_signals)
     );
 
-    mux2 mux2_m (
+    /*mux2 mux2_m (
         .i0(b4_alu_res),
         .i1(b4_mdata),
         .s(b4_signals[6]),
         .o(wrdata)
-    );
+    );*/
 
     assign wraddr = b4_dest;
     assign reg_write = b4_signals[5];

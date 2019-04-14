@@ -4,7 +4,7 @@ module memory_stage (
     input [31:0] alu_result,
     input [31:0] valB,
     input [7:0] signals,
-    output [31:0] memory_data   //data loaded from memory (array)
+    output [31:0] final_data   
 );
 
 
@@ -18,6 +18,7 @@ module memory_stage (
     //signals[0]: wire goto_flg; //next instruction: pc + 4 bytes * offset
 
 
+    wire [31:0] memory_data;
 	//data loaded from memory (array)
     //memory implemented by means of arrays
     memory data_mem(
@@ -28,5 +29,12 @@ module memory_stage (
         .data_out(memory_data)
     );
 
+
+    mux2 mux2_m (
+        .i0(alu_result),
+        .i1(memory_data),
+        .s(signals[6]),
+        .o(final_data)
+    );
 
 endmodule
