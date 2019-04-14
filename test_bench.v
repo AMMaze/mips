@@ -40,7 +40,7 @@ module test_bench ();
         change = 0;
         #30
         change = 1;
-        #250
+        #500
         $finish;
     end
 

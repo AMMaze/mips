@@ -24,6 +24,8 @@ module mips (clock, reset, change, step);
     wire pc_ctrl; //next instruction: pc + 4 bytes * offset
 	wire [5:0] ALU_ctrl; //alu opcode
 
+//-------------- fetch ---------------------------------
+
 	wire [31:0] new_addr, i_addr; //instructions addresses
     //program counter that works like this: pass new instruct address -> on pos
     //edge of the clock it will change it's output (PC) for new address
@@ -41,7 +43,11 @@ module mips (clock, reset, change, step);
         .sel(i_addr), 
         .out(i_data)
     );
+
+//-------------- fetch ---------------------------------
 	
+
+//-------------- decode --------------------------------
 	wire [4:0] write_addr; //write to this register
 	wire [31:0] read_data1; //data from first register [25:21]
     wire [31:0] read_data2; //data from second register [20:16]
@@ -59,8 +65,11 @@ module mips (clock, reset, change, step);
         .rdata1(read_data1), 
         .rdata2(read_data2)
     );
-	
-	wire [31:0] ALU_input, ALU_out; //input and output for ALU
+//-------------- decode --------------------------------
+
+//-------------- execute -------------------------------
+
+    wire [31:0] ALU_input, ALU_out; //input and output for ALU
     //alu itself is quite simple: two operands and opcode
     //but we need separate wire ALU_input, since the second operand depends on
     //instruction type
@@ -71,6 +80,10 @@ module mips (clock, reset, change, step);
         .out(ALU_out)
     );
 	
+//-------------- execute -------------------------------
+
+//-------------- memory --------------------------------
+
 	wire [31:0] mem_data; //data loaded from memory (array)
     //memory implemented by means of arrays
     memory data_mem(
@@ -81,6 +94,9 @@ module mips (clock, reset, change, step);
         .data_out(mem_data)
     );
 
+//-------------- memory --------------------------------
+
+//-------------- decode --------------------------------
 	wire [31:0] extended32; //immediate value extended to 32 bits
     wire Sign;
     //since immediate values are restricted to 16 bits, we have to extend it to 32 bits
@@ -89,10 +105,15 @@ module mips (clock, reset, change, step);
         .sign(Sign),
         .out(extended32[31:0])
     );
-	
+//-------------- decode --------------------------------
+
+
+
+//-------------- execute -------------------------------
+
     //interpretation of ALU_out, that is basically just a subtraction of given operands,  
     //depends on the type of an instruction (bne/beq) 
-	assign pc_ctrl = ((ALU_out != 32'd0)^eq) ? branch : 0;
+	assign pc_ctrl = (((ALU_out != 32'd0)^eq) ? branch : 0) | goto_flg;
 
     wire [31:0] goto_addr;
     wire goto_flg;
@@ -117,6 +138,12 @@ module mips (clock, reset, change, step);
     //goto
     mux2 #(32) mux2_jump(cond_addr, goto_addr, goto_flg, res_jump_addr); 
 
+//-------------- execute -------------------------------
+
+
+
+//-------------- fetch ---------------------------------
+
     //returns address of a new instruction
     //offset is applied to current address only when jump is active
 	next_pc NextPC(
@@ -126,15 +153,39 @@ module mips (clock, reset, change, step);
         .jmp(pc_ctrl)
     );
 
+//-------------- fetch ---------------------------------
+
+
+
+
+//-------------- decode --------------------------------
     //destination register depends on the type of instruction
     //R-type -> [15:11]
 	mux2 #(5) mux2_1(i_data[20:16], i_data[15:11], reg_res, write_addr); 
+//-------------- decode --------------------------------
+
+
+
+
+//-------------- execute -------------------------------
+
     //source for second operand in ALU: constant/register
 	mux2 mux2_2(read_data2, extended32, ALUSrc, ALU_input); 
+//-------------- execute -------------------------------
+
+
+
+//-------------- write ---------------------------------
     //for lw-op result is loaded from memory, in other cases - output from alu
 	mux2 mux2_3(ALU_out, mem_data, MemToReg, write_data); 
 	
+//-------------- write ---------------------------------
+
+
+
+//-------------- decode --------------------------------
 	mips_states control(i_data, reg_res, ALUSrc, MemToReg, reg_write, MemWrite, MemRead, branch, eq, goto_flg, Sign, ALU_ctrl);
+//-------------- decode --------------------------------
 
 
 endmodule

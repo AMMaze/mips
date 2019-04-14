@@ -13,9 +13,9 @@ end
 
 always @(posedge clk, posedge reset) begin
     if (reset)
-        currPC = 0;
+        currPC <= 0;
     else
-        currPC = newPC;
+        currPC <= newPC;
 end
 
 assign PC = currPC;
