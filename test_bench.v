@@ -44,7 +44,7 @@ module test_bench ();
         $finish;
     end
 
-    mips mips_mod(
+    pipeline mips_mod(
         .clock(osc),
         .reset(rst),
         .change(change),
