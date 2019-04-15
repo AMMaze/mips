@@ -41,7 +41,7 @@ module pipeline (
 
     buffer1 if_id_buf1 (
         .clock(clk),
-        .reset(reset),
+        .reset(reset | b3_jmp_flg),
         .load(stall1 | stall2),
         .pc_in(i_addr),
         .instr_in(i_data),
@@ -136,7 +136,7 @@ module pipeline (
 
     buffer2 id_ex_buf2 (
         .clock(clk),
-        .reset(reset),
+        .reset(reset | b3_jmp_flg),
         .stall(stall1 | stall2),
         .pc_in(b1_i_addr),
         .valA_in(read_data1_raw),

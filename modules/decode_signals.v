@@ -25,7 +25,7 @@ case (instr[31:26])
   6'b000000: // R-type
   begin
     reg_res <= 1;
-    signals <= 8'b00100000;
+    signals <= instr[5] == 1'b1 ? 8'b00100000 : 8'b00000000;
     //ALUSrc <= 0;
     //MemToReg <= 0;
     //RegWrite <= 1;
