@@ -2,6 +2,7 @@
 module buffer2 
     ( input clock, 
       input reset, 
+      input stall,          //signal for nop when read after LW
       input [31:0] pc_in, 
       input [31:0] valA_in, 
       input [31:0] valB_in, 
@@ -20,67 +21,80 @@ module buffer2
       output [7:0] signals_out
   );
 
+
+    /*wire nop;
+    register #(1) rnop (
+        .in(stall),
+        .out(nop),
+        .load(1'b1),
+        .clock(clock),
+        .reset(reset)
+    );*/
+
+    wire [31:0] nstall32;
+    assign nstall32 = {32{~stall}};
+
     register #(32) pc(
-        .in(pc_in),
+        .in(pc_in & nstall32),
         .out(pc_out),
-        .load(1'd1),
+        .load(1'b1),
         .clock(clock),
         .reset(reset)
     );
 
     register #(32) reg1(
-        .in(valA_in),
+        .in(valA_in & nstall32),
         .out(valA_out),
-        .load(1'd1),
+        .load(1'b1),
         .clock(clock),
         .reset(reset)
     );
 
     register #(32) reg2(
-        .in(valB_in),
+        .in(valB_in & nstall32),
         .out(valB_out),
-        .load(1'd1),
+        .load(1'b1),
         .clock(clock),
         .reset(reset)
     );
 
     register #(32) off(
-        .in(offset_in),
+        .in(offset_in & nstall32),
         .out(offset_out),
-        .load(1'd1),
+        .load(1'b1),
         .clock(clock),
         .reset(reset)
     );
 
     register #(5) wrt(
-        .in(dest_in),
+        .in(dest_in & {5{~stall}}),
         .out(dest_out),
-        .load(1'd1),
+        .load(1'b1),
         .clock(clock),
         .reset(reset)
     );
 
     register #(6) op(
-        .in(op_in),
+        .in(op_in & {6{~stall}}),
         .out(op_out),
-        .load(1'd1),
+        .load(1'b1),
         .clock(clock),
         .reset(reset)
     );
 
     register #(32) jmp(
-        .in(jump_addr_in),
+        .in(jump_addr_in & nstall32),
         .out(jump_addr_out),
-        .load(1'd1),
+        .load(1'b1),
         .clock(clock),
         .reset(reset)
     );
 
 
     register #(8) sig(
-        .in(signals_in),
+        .in(signals_in & {8{~stall}}),
         .out(signals_out),
-        .load(1'd1),
+        .load(1'b1),
         .clock(clock),
         .reset(reset)
     );

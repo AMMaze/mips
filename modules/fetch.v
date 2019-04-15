@@ -3,6 +3,7 @@ module fetch (
     input clock, reset, 
     input [31:0] jump_target,   //jump address
     input jump_flg,             
+    input stall,
     output [31:0] instruction,  //instruction data 
     output [31:0] address       //instruction address
 );
@@ -15,7 +16,8 @@ module fetch (
         .clk(clock), 
         .newPC(new_addr), 
         .PC(i_addr),
-        .reset(reset)
+        .reset(reset),
+        .load(stall)
     );
 	
     //selects from it's memory (just a big 'case') instruction corresponding to

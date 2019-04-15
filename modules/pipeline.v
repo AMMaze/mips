@@ -23,6 +23,8 @@ module pipeline (
     wire [31:0] b3_jmp_addr; //for third buffer
     wire b3_jmp_flg;
 
+    wire stall1, stall2;         //for corner case: read right after LW
+
     //first stage
     //fetching instruction from memory and calculating address of the next instruction 
     fetch fetch (
@@ -30,6 +32,7 @@ module pipeline (
         .reset(reset),
         .jump_target(b3_jmp_addr),
         .jump_flg(b3_jmp_flg),
+        .stall(stall1 | stall2),
         .instruction(i_data),
         .address(i_addr)
     );
@@ -39,6 +42,7 @@ module pipeline (
     buffer1 if_id_buf1 (
         .clock(clk),
         .reset(reset),
+        .load(stall1 | stall2),
         .pc_in(i_addr),
         .instr_in(i_data),
         .pc_out(b1_i_addr),
@@ -51,6 +55,9 @@ module pipeline (
     wire [5:0] alu_op;
     wire [7:0] signals;
     wire [31:0] jump_addr;
+    wire [4:0] b4_dest;         //from forth buffer
+    wire [7:0] b4_signals;
+    wire [31:0] b4_wrdata;
     //second stage
     //decoding current instruction, reading values from registers
     decode decode (
@@ -58,9 +65,9 @@ module pipeline (
         .reset(reset),
         .instruction(b1_i_data),       //instruction fetched on previous stage
         .i_address(b1_i_addr),
-        .write_data(wrdata),        //data to be written to register
-        .write_address(wraddr),     //address of register for writing from last stage
-        .write(reg_write),          //enable write to register
+        .write_data(b4_wrdata),        //data to be written to register
+        .write_address(b4_dest),     //address of register for writing from last stage
+        .write(b4_signals[5]),          //enable write to register
         .valA(read_data1),          //data from first register [25:21]
         .valB(read_data2),          //data from second register [20:16]
         .immediate(offset32),         //extended immediate value
@@ -71,17 +78,69 @@ module pipeline (
     );
 
 
-    wire [31:0] b2_i_addr, b2_read_data1, b2_read_data2, b2_offset32, b2_jump_addr;
+    wire [4:0] b3_dest;     //from second and third buffer
     wire [4:0] b2_dest;
+    //mux4 for data from decode, execute, memory and write
+    //stages to bypass when RAW hazard occurs
+    wire [1:0] valA_control, valB_control;
+    wire [31:0] read_data1_raw, read_data2_raw;
+    data_haz_control dhc_valA (
+        .raddr(b1_i_data[25:21]),
+        .dest2(b2_dest),
+        .dest3(b3_dest),
+        .dest4(b4_dest),
+        .rwrt2(b2_signals[5]),
+        .rwrt3(b3_signals[5]),
+        .rwrt4(b4_signals[5]),
+        .memtoreg2(b2_signals[6]),
+        .out(valA_control),
+        .stall(stall1)
+    );
+
+
+    mux4 #(32) mux4_valA_input (
+        .i0(read_data1),
+        .i1(alu_res),
+        .i2(wrdata),
+        .i3(b4_wrdata),
+        .s(valA_control),
+        .o(read_data1_raw)
+    );
+
+    data_haz_control dhc_valB (
+        .raddr(b1_i_data[20:16]),
+        .dest2(b2_dest),
+        .dest3(b3_dest),
+        .dest4(b4_dest),
+        .rwrt2(b2_signals[5]),
+        .rwrt3(b3_signals[5]),
+        .rwrt4(b4_signals[5]),
+        .memtoreg2(b2_signals[6]),
+        .out(valB_control),
+        .stall(stall2)
+    );
+
+
+    mux4 #(32) mux4_valB_input (
+        .i0(read_data2),
+        .i1(alu_res),
+        .i2(wrdata),
+        .i3(b4_wrdata),
+        .s(valB_control),
+        .o(read_data2_raw)
+    );
+
+    wire [31:0] b2_i_addr, b2_read_data1, b2_read_data2, b2_offset32, b2_jump_addr;
     wire [5:0] b2_alu_op;
     wire [7:0] b2_signals;
 
     buffer2 id_ex_buf2 (
         .clock(clk),
         .reset(reset),
+        .stall(stall1 | stall2),
         .pc_in(b1_i_addr),
-        .valA_in(read_data1),
-        .valB_in(read_data2),
+        .valA_in(read_data1_raw),
+        .valB_in(read_data2_raw),
         .offset_in(offset32),
         .jump_addr_in(jump_addr),
         .dest_in(dest),
@@ -117,7 +176,6 @@ module pipeline (
 
 
     wire [31:0] b3_alu_res, b3_read_data2;
-    wire [4:0] b3_dest;
     wire [5:0] b3_alu_op;
     wire [7:0] b3_signals;
     
@@ -153,10 +211,7 @@ module pipeline (
     );
 
 
-    wire [31:0] b4_wrdata;
-    wire [4:0] b4_dest;
     wire [5:0] b4_alu_op;
-    wire [7:0] b4_signals;
 
     buffer4 mem_wrt_buf4 (
         .clock(clk),
@@ -180,7 +235,7 @@ module pipeline (
         .o(wrdata)
     );*/
 
-    assign wraddr = b4_dest;
-    assign reg_write = b4_signals[5];
+    //assign wraddr = b4_dest;
+    //assign reg_write = b4_signals[5];
 
 endmodule
