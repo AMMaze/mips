@@ -2,6 +2,8 @@
 
 module mem_control (
     input clock, reset, write, read,
+    input hit,
+    output update_tag,
     output ready
 );
 
@@ -17,6 +19,7 @@ module mem_control (
 
     reg [3:0] state, nextstate;
     reg enable;
+    reg update;
 
     always @(posedge clock)
         state = nextstate;
@@ -24,12 +27,14 @@ module mem_control (
     always @(posedge reset) begin
         nextstate = ST_IDLE;
         enable = 0;
+        update = 0;
     end
 
     always @(state or write or read) begin
         case(state)
             ST_IDLE: begin
                 enable = 0;
+                update = 0;
                 if (read)
                     nextstate = ST_READ;
                 else if (write)
@@ -37,17 +42,40 @@ module mem_control (
             end
 
             ST_READ: begin
+                if (hit) begin 
+                    nextstate = ST_IDLE;
+                    enable = 1;
+                end
+                else begin 
+                    nextstate = ST_READMISS;
+                    update = 1;
+                end
+            end
+
+            ST_WRITE: begin
+                if (hit) begin
+                    nextstate = ST_IDLE;
+                    enable = 1;
+                end
+                else begin
+                    nextstate = ST_WRITERAM;
+                    //update = 1;
+                end
+            end
+
+            ST_READMISS: begin
                 nextstate = ST_IDLE;
                 enable = 1;
             end
 
-            ST_WRITE: begin
+            ST_WRITERAM: begin
                 nextstate = ST_IDLE;
                 enable = 1;
             end
+
         endcase
     end
 
     assign ready = enable;
-
+    assign update_tag = update;
 endmodule

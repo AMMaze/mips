@@ -7,14 +7,14 @@ module memory_cache (
 );
 
     wire ready;
-    /*
-    wire hit;
+    
+    wire hit, utag;
     wire [127:0] mdata_out;//, cache_data;
     //assign cache_data = ~hit & ~write ? mdata_out : data_in; 
     data_bank #(1024) data_bank1 (
         .clock(clock),
         .reset(reset),
-        .write((write & hit) | (~hit & read)),
+        .write(utag),
         .valid(1'b1),
         .addr(address),
         //.data_in(cache_data),
@@ -22,7 +22,7 @@ module memory_cache (
         //.data_out(data_out)
     );
 
-
+/*
     wire [31:0] test;
     cache_ram cache_ram (
         .clock(clock),
@@ -52,6 +52,8 @@ module memory_cache (
        .reset(reset),
        .write(write),
        .read(read),
+       .hit(hit),
+       .update_tag(utag),
        .ready(ready)
    );
 
