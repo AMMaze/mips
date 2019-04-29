@@ -2,6 +2,7 @@
 module buffer3 
     ( input clock, 
       input reset, 
+      input load,
       input [31:0] target_in, 
       input jmp_in, 
       input [31:0] alu_in, 
@@ -21,7 +22,7 @@ module buffer3
     register #(32) r0(
         .in(target_in),
         .out(target_out),
-        .load(1'd1),
+        .load(load),
         .clock(clock),
         .reset(reset)
     );
@@ -29,7 +30,7 @@ module buffer3
     register #(32) r1(
         .in(alu_in),
         .out(alu_out),
-        .load(1'd1),
+        .load(load),
         .clock(clock),
         .reset(reset)
     );
@@ -37,7 +38,7 @@ module buffer3
     register #(32) r2(
         .in(valB_in),
         .out(valB_out),
-        .load(1'd1),
+        .load(load),
         .clock(clock),
         .reset(reset)
     );
@@ -45,7 +46,7 @@ module buffer3
     register #(1) r3(
         .in(jmp_in),
         .out(jmp_out),
-        .load(1'd1),
+        .load(load),
         .clock(clock),
         .reset(reset)
     );
@@ -53,7 +54,7 @@ module buffer3
     register #(5) r4(
         .in(dest_in),
         .out(dest_out),
-        .load(1'd1),
+        .load(load),
         .clock(clock),
         .reset(reset)
     );
@@ -61,7 +62,7 @@ module buffer3
     register #(6) r5(
         .in(op_in),
         .out(op_out),
-        .load(1'd1),
+        .load(load),
         .clock(clock),
         .reset(reset)
     );
@@ -69,7 +70,7 @@ module buffer3
     register #(8) sig(
         .in(signals_in),
         .out(signals_out),
-        .load(1'd1),
+        .load(load),
         .clock(clock),
         .reset(reset)
     );

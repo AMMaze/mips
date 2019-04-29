@@ -25,6 +25,7 @@ module pipeline (
 
     wire stall1, stall2;         //for corner case: read right after LW
 
+    wire mem_stall;
     //first stage
     //fetching instruction from memory and calculating address of the next instruction 
     fetch fetch (
@@ -32,7 +33,7 @@ module pipeline (
         .reset(reset),
         .jump_target(b3_jmp_addr),
         .jump_flg(b3_jmp_flg),
-        .stall(stall1 | stall2),
+        .stall(stall1 | stall2 | mem_stall),
         .instruction(i_data),
         .address(i_addr)
     );
@@ -42,7 +43,7 @@ module pipeline (
     buffer1 if_id_buf1 (
         .clock(clk),
         .reset(reset | b3_jmp_flg),
-        .load(stall1 | stall2),
+        .load(stall1 | stall2 | mem_stall),
         .pc_in(i_addr),
         .instr_in(i_data),
         .pc_out(b1_i_addr),
@@ -138,6 +139,7 @@ module pipeline (
         .clock(clk),
         .reset(reset | b3_jmp_flg),
         .stall(stall1 | stall2),
+        .load(~mem_stall),
         .pc_in(b1_i_addr),
         .valA_in(read_data1_raw),
         .valB_in(read_data2_raw),
@@ -182,6 +184,7 @@ module pipeline (
     buffer3 ex_mem_buf3 (
         .clock(clk),
         .reset(reset),
+        .load(~mem_stall),
         .target_in(jmp_addr),
         .jmp_in(jmp_flg),
         .alu_in(alu_res),
@@ -207,7 +210,8 @@ module pipeline (
         .alu_result(b3_alu_res),
         .valB(b3_read_data2),
         .signals(b3_signals),
-        .final_data(wrdata)
+        .final_data(wrdata),
+        .stall(mem_stall)
     );
 
 
@@ -216,6 +220,7 @@ module pipeline (
     buffer4 mem_wrt_buf4 (
         .clock(clk),
         .reset(reset),
+        .load(~mem_stall),
         .data_in(wrdata),
         //.mem_in(mdata),
         .dest_in(b3_dest),

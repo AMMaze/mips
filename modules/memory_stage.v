@@ -4,7 +4,8 @@ module memory_stage (
     input [31:0] alu_result,
     input [31:0] valB,
     input [7:0] signals,
-    output [31:0] final_data   
+    output [31:0] final_data,
+    output stall
 );
 
 
@@ -21,12 +22,15 @@ module memory_stage (
     wire [31:0] memory_data;
 	//data loaded from memory (array)
     //memory implemented by means of arrays
-    memory data_mem(
+    memory_cache data_mem(
+        .clock(clock),
+        .reset(reset),
         .read(signals[4]), 
         .write(signals[3]), 
-        .addr(alu_result[7:0]), 
+        .address(alu_result), 
         .data_in(valB), 
-        .data_out(memory_data)
+        .data_out(memory_data),
+        .stall(stall)
     );
 
 

@@ -3,6 +3,7 @@ module buffer4
 (
     input clock, 
     input reset,
+    input load,
     input [31:0] data_in,
     //input [31:0] mem_in,
     input [4:0] dest_in,
@@ -18,7 +19,7 @@ module buffer4
     register #(32) r0(
         .in(data_in),
         .out(data_out),
-        .load(1'd1),
+        .load(load),
         .clock(clock),
         .reset(reset)
     );
@@ -26,7 +27,7 @@ module buffer4
     /*register #(32) r1(
         .in(mem_in),
         .out(mem_out),
-        .load(1'd1),
+        .load(load),
         .clock(clock),
         .reset(reset)
     );*/
@@ -34,7 +35,7 @@ module buffer4
     register #(5) r2(
         .in(dest_in),
         .out(dest_out),
-        .load(1'd1),
+        .load(load),
         .clock(clock),
         .reset(reset)
     );
@@ -42,7 +43,7 @@ module buffer4
     register #(6) r3(
         .in(op_in),
         .out(op_out),
-        .load(1'd1),
+        .load(load),
         .clock(clock),
         .reset(reset)
     );
@@ -50,7 +51,7 @@ module buffer4
     register #(8) sig(
         .in(signals_in),
         .out(signals_out),
-        .load(1'd1),
+        .load(load),
         .clock(clock),
         .reset(reset)
     );
