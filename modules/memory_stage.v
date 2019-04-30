@@ -20,8 +20,7 @@ module memory_stage (
 
 
     wire [31:0] memory_data;
-	//data loaded from memory (array)
-    //memory implemented by means of arrays
+	//connection with ram if carried out through cache
     memory_cache data_mem(
         .clock(clock),
         .reset(reset),

@@ -3,7 +3,8 @@
 module mem_control (
     input clock, reset, write, read,
     input hit,
-    output update_tag,
+    output update_tag,      
+    output update_cache,
     output ready
 );
 
@@ -16,10 +17,12 @@ module mem_control (
     parameter ST_WRITEMISS  = 4'b0110;
     parameter ST_READRAM    = 4'b0111;
     parameter ST_WRITERAM   = 4'b1000;
+    parameter ST_WRITEWAIT  = 4'b1001;
 
     reg [3:0] state, nextstate;
     reg enable;
     reg update;
+    reg update_cache;
 
     always @(posedge clock)
         state = nextstate;
@@ -28,13 +31,22 @@ module mem_control (
         nextstate = ST_IDLE;
         enable = 0;
         update = 0;
+        update_cache = 0;
     end
 
-    always @(state or write or read) begin
+    //always @(write or read)
+    //    state = ST_IDLE;
+
+    always @(state or posedge write or posedge read) begin
+    //always @(posedge clock)
+    //    state = nextstate;
+        if (~write & ~read)
+            state = ST_IDLE;
         case(state)
             ST_IDLE: begin
                 enable = 0;
                 update = 0;
+                update_cache = 0;
                 if (read)
                     nextstate = ST_READ;
                 else if (write)
@@ -42,30 +54,48 @@ module mem_control (
             end
 
             ST_READ: begin
-                if (hit) begin 
+                if (!read)
                     nextstate = ST_IDLE;
-                    enable = 1;
-                end
-                else begin 
-                    nextstate = ST_READMISS;
-                    update = 1;
+                else begin
+                    if (hit) begin 
+                        nextstate = ST_IDLE;
+                        enable = 1;
+                    end
+                    else begin 
+                        nextstate = ST_READRAM;
+                        update = 1;
+                    end
                 end
             end
 
+            ST_READRAM: begin
+                nextstate = ST_READMISS;
+                update_cache = 1;
+            end
+
             ST_WRITE: begin
-                if (hit) begin
+                if (!write)
                     nextstate = ST_IDLE;
-                    enable = 1;
-                end
                 else begin
-                    nextstate = ST_WRITERAM;
-                    //update = 1;
+                    if (hit) begin
+                        nextstate = ST_WRITEWAIT;
+                        //update = 1;
+                        update_cache = 1;
+                    end
+                    else begin
+                        nextstate = ST_WRITEWAIT;
+                        //update = 1;
+                    end
                 end
             end
 
             ST_READMISS: begin
                 nextstate = ST_IDLE;
                 enable = 1;
+            end
+
+            ST_WRITEWAIT: begin
+                nextstate = ST_WRITERAM;
             end
 
             ST_WRITERAM: begin

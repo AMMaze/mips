@@ -6,10 +6,10 @@ module memory(clock, read, write, addr, data_in, data_out);
     input write;                      
     input [31:0] addr;   
     input [31:0] data_in;     
-    output [31:0] data_out;  
+    output [127:0] data_out;    //four words 
   
-    reg   [31:0] DATABUS_driver;
-    wire  [31:0] data_out = DATABUS_driver;
+    reg   [127:0] DATABUS_driver;
+    wire  [127:0] data_out = DATABUS_driver;
     reg   [31:0] ram[0:2**16-1];           
 
     //reg [31:0] data_out;
@@ -23,6 +23,8 @@ module memory(clock, read, write, addr, data_in, data_out);
             ram[i] <= i*10 + 1;
     end
 
+    reg [15:0] aligned;
+
     //always @(read or write or addr or data_in)
     always @(posedge clock)
     begin
@@ -30,6 +32,13 @@ module memory(clock, read, write, addr, data_in, data_out);
         if (write)
             ram[addr[15:0]] = data_in;
         
-        DATABUS_driver =  ram[addr[15:0]];
+        aligned = addr[15:0];
+        aligned[1:0] = 2'b00;
+
+        //DATABUS_driver =  ram[addr[15:0]];
+        DATABUS_driver[127:96] =  ram[aligned];
+        DATABUS_driver[95:64] =  ram[aligned + 1];
+        DATABUS_driver[63:32] =  ram[aligned + 2];
+        DATABUS_driver[31:0] =  ram[aligned + 3];
     end
 endmodule
