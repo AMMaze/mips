@@ -73,17 +73,24 @@ module instruction_memory
   case(sel)
     32'd0 : out = {OP_ADDI, R00, R00, 16'd3}; // $0 = $0 + 3 -> $0 == 3
     32'd4 : out = {OP_ADDIU, R01, R01, 16'd4}; // $1 = $1 + 4 -> $1 == 4
-    32'd8 : out = {OP_SW, R00, R01, 16'd0}; // MEM[$0 + 0] = $1 -> MEM[3] == 4
-    32'd12 : out = {OP_SW, R00, R00, 16'b1<<12};    // MEM[$0 + 2**12] = $0 -> MEM[2**12 + 3] == 3
-    32'd16 : out = {OP_LW, R00, R05, 16'd0};         // $5 = MEM[$0 + 0]
+    32'd8 : out = {OP_SW, R00, R01, 16'd0}; // MEM[$0 + 0] = $1 -> MEM[3] == 4      
+                                            //writemiss: write to memory around cache (4 cycles)
+    //32'd12 : out = {OP_SW, R00, R00, 16'b1<<12};    // MEM[$0 + 2**12] = $0 -> MEM[2**12 + 3] == 3
+    32'd12 : out = {OP_LW, R00, R06, 16'b1<<12};    // $6 = MEM[$0 + 2**12] -> $6 == x != 0     
+                                            //readmiss: read from addr 4099 | [..1]_00000000011 | [] -- tag (4 cycles)
+    32'd16 : out = {OP_LW, R00, R05, 16'd0};         // $5 = MEM[$0 + 0]                        
+                                            //readmiss: read from addr 3    | [..0]_00000000011 | [] -- tag (4 cycles)
     32'd20 : out = {OP_R, R00, R01, R02, ZERO_SHAMT, OPR_ADDU}; // $2 = $1 + $0 -> $2 == 7
-    32'd24 : out = {OP_R, R00, R01, R03, ZERO_SHAMT, OPR_ADDU}; // $3 = $1 + $0 -> $3 == 7
-    32'd28 : out = {OP_LW, R00, R03, 16'd0}; // $3 = MEM[$0 + 0] -> $3 == 4
-    32'd32 : out = {OP_BEQ, R02, R03, -16'd3}; // if($2 == $3) jump to (24 + 4 + 4 * (-3)) = 16
-    32'd36 : out = {OP_ADDI, R04, R04, 16'd0}; // $4 = $4 + 0 -> $4 == 0
-    32'd40 : out = {OP_ADDI, R00, R00, -16'd1}; // $0 = $0 + (-1) -> $0--
-    32'd44 : out = {OP_BNE, R00, R04, -16'd2}; // if($0 != $4) jump to (36 + 4 + 4 * (-2)) = 32
-    32'd48 : out = {OP_J, 26'd0}; // jump to 4 * 0 = 0
+    32'd24 : out = {OP_SW, R00, R00, 16'd0}; // MEM[$0 + 0] = $1 -> MEM[3] == 3                 
+                                            //writehit: write through cache to memory 3 (still 4 cycles, cause writing to memory too)
+    32'd28 : out = {OP_R, R00, R01, R03, ZERO_SHAMT, OPR_ADDU}; // $3 = $1 + $0 -> $3 == 7      
+    32'd32 : out = {OP_LW, R00, R03, 16'd0}; // $3 = MEM[$0 + 0] -> $3 == 3                     
+                                            //readhit: read from addr 3 (2 cycles)
+    32'd36 : out = {OP_BEQ, R02, R03, -16'd3}; // if($2 == $3) jump to (24 + 4 + 4 * (-3)) = 16
+    32'd40 : out = {OP_ADDI, R04, R04, 16'd0}; // $4 = $4 + 0 -> $4 == 0
+    32'd44 : out = {OP_ADDI, R00, R00, -16'd1}; // $0 = $0 + (-1) -> $0--
+    32'd48 : out = {OP_BNE, R00, R04, -16'd2}; // if($0 != $4) jump to (36 + 4 + 4 * (-2)) = 32
+    32'd52 : out = {OP_J, 26'd0}; // jump to 4 * 0 = 0
     default: out = 0;
   endcase
 endmodule

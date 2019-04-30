@@ -95,6 +95,8 @@ module mem_control (
             end
 
             ST_WRITEWAIT: begin
+                if (hit)
+                    update_cache = 1;
                 nextstate = ST_WRITERAM;
             end
 
